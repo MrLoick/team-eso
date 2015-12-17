@@ -1,0 +1,516 @@
+
+
+
+---
+
+# Introduction #
+Polygon based area protection, with child zones, permissions inheritance, and map border protection.
+**Lead Developer** jblaske
+
+
+---
+
+# Features #
+  * Polygonal area creation. (Not just cuboids!)
+  * In-game zone creation.
+  * Provide a Circular border to your map.
+  * Hierarchical Permissions with Child and Parent Zones.
+  * Display Entering and Exiting messages in chat.
+  * Enhanced /who
+  * Advanced control of zone based regeneration
+  * Many zone specific controls for things like Fire, Explosions and Mob spawning control
+
+
+---
+
+# Creating Zones #
+Use the /zone command at any time for in game help. This requires that you have the **epiczones.admin** permission.
+
+The following is an example for creating a PVP enabled arena zone in game:
+```
+/zone create arena
+```
+You are then put into draw mode, use the zoneTool in your config (Default is Stick) to right click and set points. When you are done drawing, enter the command:
+```
+/zone save
+```
+
+When a zone is created, its Name is defaulted to the tag, and its world is defaulted to the world you are in. Both can be changed after drawing your polygon.
+```
+/zone name PVP Arena //Sets name to 'PVP Arena'
+/zone flag pvp true //Enables PVP
+/zone message enter PVP is enabled, beware! //Sets the enter message to a informative warning
+/zone message exit You are no longer in a PVP zone, you can relax now. //Sets the exit message to let players know they are save.
+/zone save //Saves the zone to file.
+```
+And your zone is done!
+
+## Child/Parent Zones ##
+If your zone is within the borders of another zone, you will want to make sure it is a child of that zone.
+
+These commands will show you how to set a zone as a child to another zone:
+```
+/zone edit bigcity
+/zone addchildren arena
+/zone save
+```
+
+Next you will want to set some permissions on your zone. In these next commands we will make it so that only members of our server can enter the arena.
+```
+/zone edit arena
+/zone perm default entry deny
+/zone perm member entry allow
+/zone save
+```
+More information on Permissions can be found [below](EpicZones#Permissions.md).
+
+Now you are all set, you have a basic PVP arena zone that is a child to the big city!
+
+**NOTE:** You must have only 1 point selected when you save your zone, to make your zone a circle.
+**NOTE:** You must have at least 3 points selected when you save your zone, to make your zone a polygon.
+
+
+---
+
+# Map Radius #
+Map radius, when enabled, will prevent players from traveling outside of the fixed range from 0,0 on the map.
+
+To allow a player to ignore the map radius add this to their permissions in your permissions plugin configuration.
+`epiczones.ignoremapradius`
+
+
+---
+
+# Permissions #
+EpicZones handles its zone based permissions internally. Each zone controls who can do what within it. There are also default settings for when no zone can be found where a player is located. These are the "default..." options in the config file.
+
+To give a player permissions to do things in a zone, you add that player, or their group (if you are using a permissions plugin that has grouping) into the zone's permissions.
+
+**Permissions are set while in edit mode on a zone.**
+
+If you want to deny all players in the default group, the ability to build within a zone. You would use the following command:
+`/zone perm default build deny`
+
+If you would like a member to be able to ignore all zone permissions add this to their permissions in your permissions plugin configuration.
+`epiczones.ignorepermissions`
+
+## Possible Permission Nodes ##
+  * build
+    * The placement of blocks and pouring of buckets
+  * destroy
+    * The destruction of blocks and the scooping of buckets
+  * entry
+    * Player walk or teleport within a zone.
+
+## Permission Hierarchy ##
+These are the steps permission checks when seeing if a user has permission to perform an action. If the answer is 'no' the logic progresses deeper.
+
+  * Is player explicitly denied?
+    * Is player explicitly allowed?
+      * Is player explicitly denied in parent?
+        * Is player explicitly allowed in parent?
+          * Is player allowed by default config?
+
+
+---
+
+# Flags #
+
+### PVP ###
+> Zone level control to dictate weather player versus player damage is allowed.
+
+#### Values ####
+  * **True** A setting of true, means that players will be able to damage each other with weapons and fists.
+  * **False** A Setting of false, means that players will not be able to damage each other with weapons and fists.
+
+#### Notes ####
+  * You must have PVP enabled in your server.properties file.
+  * When checking for pvp allowance, it checks the zone of the player being damaged, not the player dealing the damage.
+#### Syntax ####
+```
+/zone flag pvp <true/false>
+```
+
+
+
+### Regen ###
+> Zone level control that dictates the regen or degen of health when a player is inside the zone.
+
+#### Values ####
+  * **Amount** the amount the players health is modified by each regen tick (can be negative). A value of 1 equals half a heart.
+  * **Delay** (optional) Amount of time a player must be within the zone
+  * **Interval** (optional) Frequency of regen tick for that zone in miliseconds.before regen ticks apply to them
+  * **MaxRegen** (optional) The maximum amount the zone will regen a player's health.
+  * **MinDegen** (optional) The minimum amount the zone will degen a player's health.
+  * **RestDelay** (optional) A length in time that a user must hold still before the regen/degen effects will take place.
+  * **BedBonus** (optional) The amount of bonus regen if a player is in a bed.
+
+#### Notes ####
+  * Currently, you cannot modify MaxRegen, MinDegen, RestDelay nor BedBonus in game. These values must be changed manually in the zone's yml file.
+  * Moving the mouse to look around still counts as moving, and will prevent a player from entering 'rest' mode. This will be changed in the future.
+
+#### Syntax ####
+```
+/zone flag regen <amount> [Delay] [Interval] [MaxRegen] [MinDegen] [RestDelay] [BedBonus]
+```
+
+
+
+### Mobs ###
+> Zone level control of the mobs allowed to spawn within.
+
+#### Values ####
+  * none
+  * all
+  * animals
+  * monsters
+  * squid
+  * chicken
+  * cow
+  * sheep
+  * pig
+  * wolf
+  * creeper
+  * zombie
+  * ghast
+  * giant
+  * skeleton
+  * slime
+  * spider
+
+#### Syntax ####
+```
+/zone flag mobs [value] [value] [value]
+```
+
+
+
+### Fire ###
+> Zone level control of fire
+> Flag use: /zone flag fire ignite spread
+
+#### Values ####
+  * **True** A setting of true, means that fire will be allowed within the zone.
+  * **False** A Setting of false, means that fire will be extinguished within the zone.
+
+#### Notes ####
+  * Setting the value to false, will not prohibit mobs from catching fire within a zone. To prevent this, you must also set up the Fire Burns Mobs flag.
+
+#### Syntax ####
+```
+/zone flag fire <true/false> [true/false]
+```
+
+
+
+### Explode ###
+> Zone level control of terrain destruction and damage from explosions.
+> Flag use: /zone flag explode tnt creeper ghast
+
+#### Values ####
+  * **True** A setting of true, means that explosions will be allowed within the zone.
+  * **False** A Setting of false, means that explosions and damage caused by them will be blocked within the zone.
+
+#### Syntax ####
+```
+/zone flag explode <true/false> [true/false] [true/false]
+```
+
+
+
+### Fire Burns Mobs ###
+> Zone level control to dictate weather or not fire will kill mobs. This can be used to keep mobs from dyeing during the day, or to keep your pigs from roasting when they walk over your lit netherrack.
+
+#### Values ####
+  * **True** A setting of true, means that fire will damage mobs.
+  * **False** A Setting of false, means fire will not damage mobs.
+
+#### Notes ####
+  * In order to utilize this flag, you must also set the value of the fire flag to false.
+
+#### Syntax ####
+```
+/zone flag fireburnsmobs <true/false>
+```
+
+
+
+
+---
+
+# Commands #
+All commands can be accessed with the ez prefix, to circumnavigate command conflicts, and have other aliases to allow easy use of the commands.
+
+### Zone ###
+**Permissions Required:** epiczones.admin
+> The zone command is the core of EpicZones, its how you define and manage all of your zones in game.
+
+#### Aliases ####
+  * ezzone
+  * zone
+
+#### Sub-Commands ####
+  * create
+  * save
+  * flag
+  * radius
+  * floor
+  * ceiling
+  * child
+  * owner
+  * message
+  * name
+  * draw
+  * confirm
+  * edit
+  * world
+  * cancel
+  * delete
+  * list
+  * info
+  * [perm](EZ_Perm.md)
+
+#### Notes ####
+You can color code your zone messages and names with the following color key:
+```
+&0 BLACK
+&1 DARK_BLUE
+&2 DARK_GREEN
+&3 DARK_AQUA
+&4 DARK_RED
+&5 DARK_PURPLE
+&6 GOLD
+&7 GRAY
+&8 DARK_GRAY
+&9 BLUE
+&A GREEN
+&B AQUA
+&C RED
+&D LIGHT_PURPLE
+&E YELLOW
+&F WHITE
+```
+
+#### Syntax ####
+```
+/zone <sub-command> [parameter] [parameter]
+```
+
+### Who ###
+**Permissions Required:** epiczones.who
+> Gives a list of players and the zones that they are in, if they are in a zone.
+
+#### Aliases ####
+  * ezwho
+  * who
+  * online
+  * whois
+
+#### Syntax ####
+```
+/who [all]
+```
+
+### Reload ###
+**Permissions Required:** epiczones.admin
+> Reloads all of the EpicZones configurations and zones into server memory.
+
+#### Aliases ####
+  * ezreload
+  * reload
+
+#### Syntax ####
+```
+/ezreload
+```
+
+
+---
+
+# Hero Chat Integration #
+> Enable hero chat in your EpicZones config file.
+> Make sure you have a channel in your HeroChat config that has the same name as your zone's tag.
+> That's it! EpicZones will auto leave or join any channels that match up to your zones. Enter a child zone that doesn't have a channel? no worries, EpicZones checks for parent channels.
+
+
+---
+
+# Example Files #
+## Default Config.yml ##
+```
+defaultEnter: true
+defaultDestroy: true
+defaultBuild: true
+mapRadius: 1000
+enableRadius: true
+```
+  * Default permissions are used, when nothing is specified for any given user/group.
+
+
+## Example Zone Config ##
+```
+ceiling: 128
+childzones: []
+entertext: Entering Test Zone 1...
+exittext: Leaving Test Zone 1...
+explode: false
+fire: false
+fireburnsmobs: false
+floor: 0
+mobs: 
+- all
+name: Test Zone 1
+owners: 
+- jblaske
+permissions:
+  default:
+    destroy: deny
+    build: deny
+    entry: deny
+points: '-20:20 20:20 20:-20 -20:-20 '
+pvp: false
+radius: 0
+regen:
+  amount: 0
+  bedbonus: 0
+  delay: 0
+  interval: 500
+  maxregen: 20
+  mindegen: 0
+  restdelay: 0
+sanctuary: false
+type: POLY
+world: world
+```
+
+
+---
+
+# Changelog #
+  * **Version 0.25**
+    * Enhanced Explode flag
+      * Explode now tracks TNT, Creeper and Ghasts all separately.
+    * Enhanced Fire flag
+      * Fire now tracks Ignite and Spread separately.
+    * Fixed some bugs with /who reporting funky information
+    * Fixed a bug that allowed players to use buckets when entering minecarts
+    * Fixed a bug with Min/Max De/Regen.
+  * **Version 0.22.1**
+    * Fixed a bug causing mobs not to spawn
+    * Cleaned out a bunch of old commented out code
+  * **Version 0.22**
+    * Brand New Zone Detection Algorithm, much more efficient and properly works with Global zones now.
+    * Permissions now will no longer duplicate
+    * Permissions detection is now more efficient
+    * Block break permissions are now more efficient
+    * Other minor bug fixes found along the way
+  * **Version 0.21**
+    * Fixed bug causing mob flags to not work properly.
+    * Fixed bug causing PVP zones to not function properly.
+    * Fixed a bug where signs and pictures could be placed with out permissions.
+    * Fixed a bug that didn't let you override inheriting group permission denies.
+    * When in edit mode, 3 block tall pillars of bedrock will be generated at the zone points, for easy identification of zone borders
+    * Default global zones now replace the old map radius logic.
+    * Fixed a bug in regen
+    * Other things I can't remember at the moment.
+  * **Version 0.20.1**
+    * Bug fix causing groups to not work properly
+  * **Version 0.20**
+    * Zone based permissions
+    * Enhanced Regen
+    * Refined Ownership
+    * Bug Fixes
+    * Code Cleanup
+  * **Version 0.19**
+    * Added Sanctuary flag
+    * Added Owners
+    * Improved Fire Suppression
+    * You will no longer take damage from an explosion if a zone is marked for no explosions
+    * You will no longer take burning damage in a zone that is marked for no fire
+    * Lots of other little things I can't remember.
+  * **Version 0.18**
+    * Multiworld bug fixes
+  * **Version 0.17**
+    * Support for GroupManager 1.0
+    * HeroChat 4.1.0 Support
+    * Permissions Check for /who
+    * PreLoads multi world plugins
+      * EpicGates
+      * MultiVerse
+    * A few other bug fixes
+  * **Version 0.16**
+    * fixed a bug causing EZ to improperly detects movement in world, outside of zones
+    * fixed a few bugs with HeroChat integration
+  * **Version 0.15**
+    * Verified support for CB 440
+    * Some more help message coloring.
+  * **Version 0.14**
+    * Fixed Permissions 2.5 support
+    * Fixed /zone command issues
+    * Added world based default permissions. (`epiczones.<worldname>.<flag>.[deny]`)
+  * **Version 0.13.1**
+    * Support for Permissions 2.4
+  * **Version 0.13**
+    * Removed support for Permissions 2.0
+    * Updated for new bukkit versions
+    * Added multi world map radius border
+    * Lots of code refactoring.
+  * **Version 0.12**
+    * Zone Based Fire Suppression
+    * Zone Based Explosion Suppression
+    * Zone Based Mob Lists
+    * Zone List command
+    * Zone Info command
+    * Several Stability Fixes
+    * /reloadez now works properly
+    * Setting flags in-game should now work properly
+  * **Version 0.11.1**
+    * Critical Fixes - Do not use Version 0.10 or 0.11
+  * **Version 0.10**
+    * Cleanup for newer versions of bukkit
+    * Circular Zone support.
+  * **Version 0.9**
+    * Added HeroChat support
+  * **Version 0.8**
+    * Fixed a bug when setting PVP flag
+    * Enhanced Border Protection
+      * Will now notify players with ignoremapradius when they enter/exit the radius.
+      * Border prevents Build/Destroy actions.
+      * Border properly blocks vehicles.
+    * Enhanced Zones
+      * Zones properly watch Vehicles now.
+    * Added regen flag to zones
+      * Flag template: regen:interval:amount:delay
+      * Interval: Frequency of regen tick for that zone.
+      * Amount: the amount the players health is modified by each regen tick (can be negative)
+      * Delay: Amount of time a player must be within the zone before regen ticks apply to them
+  * **Version 0.7**
+    * Fixed a bug in permissions where child explicit deny was being overridden by the parent zone.
+    * Fixed a bug where permissions were not properly refreshing when using /reloadez
+  * **Version 0.6**
+    * Added In-Game Zone Creation
+    * Added Multi-World Suport
+    * Refined "Point Within Zone" detection even further.
+    * Added permissions to /zone, /reloadez and /who commands.
+  * **Version 0.5**
+    * Added PVP flag support.
+    * Fixed bug with default permissions overriding explicit deny.
+    * Fixed a bug that would cause a border preventing movement to lock a player within it.
+    * Made movement checking more efficient.
+  * **Version 0.4**
+    * Fixed some issues in map radius
+    * Fixed bucket zone detection
+    * Added Distance to /who
+  * **Version 0.3**
+    * Revamped permissions
+    * Revamped parent/child relationships
+    * Refined "Point Within Zone" detection
+    * Reloading the server won't cause a crash now
+    * Ability to ignore permissions
+    * Ability to ignore map radius
+  * **Version 0.2**
+    * Fixed map radius detection
+    * Made map radius use configurable
+    * Fixed group based permissions checking to work a little better.
+  * **Version 0.1**
+    * Initial Release

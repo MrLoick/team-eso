@@ -1,0 +1,10 @@
+# Description #
+The perm sub command allows you to set, remove, copy and clear permissions from the zone you are currently editing.
+
+# Syntax #
+```
+/zone perm [add|remove] [build|destroy|entry] [allow|deny]
+/zone perm [copy] [zone to copy from]
+/zone perm [clear]
+/zone perm [clear] [user or group name]
+```
